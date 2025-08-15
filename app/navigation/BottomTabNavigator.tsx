@@ -42,8 +42,8 @@ export default function BottomTabNavigator() {
           fontSize: 12,
           marginBottom: 5,
         },
-        headerShown: false,
-        // headerTitle: route.name,
+        headerShown: true,
+        headerTitle: route.name,
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
