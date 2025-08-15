@@ -43,6 +43,7 @@ export default function BottomTabNavigator() {
           marginBottom: 5,
         },
         headerShown: false,
+        headerTitle: route.name,
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />

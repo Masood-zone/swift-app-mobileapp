@@ -45,31 +45,35 @@ export default function CartScreen({ navigation }: any) {
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <View style={styles.cartItem}>
-                <Text style={styles.itemName}>{item.name}</Text>
-                <Text style={styles.itemPrice}>
-                  Ghc{item.price} x {item.quantity}
-                </Text>
-                <View style={styles.quantityRow}>
-                  <TouchableOpacity
-                    onPress={() => updateQuantity(item.id, item.quantity - 1)}
-                    style={styles.qtyBtn}
-                  >
-                    <Text style={styles.qtyBtnText}>-</Text>
-                  </TouchableOpacity>
-                  <Text style={styles.qtyText}>{item.quantity}</Text>
-                  <TouchableOpacity
-                    onPress={() => updateQuantity(item.id, item.quantity + 1)}
-                    style={styles.qtyBtn}
-                  >
-                    <Text style={styles.qtyBtnText}>+</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => removeFromCart(item.id)}
-                    style={styles.removeBtn}
-                  >
-                    <Text style={styles.removeBtnText}>Remove</Text>
-                  </TouchableOpacity>
+                <View style={styles.cartItemRow}>
+                  <View style={styles.cartItemInfo}>
+                    <Text style={styles.itemName}>{item.name}</Text>
+                    <Text style={styles.itemPrice}>
+                      Ghc{item.price} x {item.quantity}
+                    </Text>
+                  </View>
+                  <View style={styles.quantityRow}>
+                    <TouchableOpacity
+                      onPress={() => updateQuantity(item.id, item.quantity - 1)}
+                      style={styles.qtyBtn}
+                    >
+                      <Text style={styles.qtyBtnText}>-</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.qtyText}>{item.quantity}</Text>
+                    <TouchableOpacity
+                      onPress={() => updateQuantity(item.id, item.quantity + 1)}
+                      style={styles.qtyBtn}
+                    >
+                      <Text style={styles.qtyBtnText}>+</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
+                <TouchableOpacity
+                  onPress={() => removeFromCart(item.id)}
+                  style={styles.removeBtn}
+                >
+                  <Text style={styles.removeBtnText}>Remove</Text>
+                </TouchableOpacity>
               </View>
             )}
             contentContainerStyle={{ paddingBottom: 20 }}
@@ -112,18 +116,33 @@ const styles = StyleSheet.create({
   },
   cartItem: {
     backgroundColor: "#fff",
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    elevation: 2,
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 16,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+  },
+  cartItemRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  cartItemInfo: {
+    flex: 1,
   },
   itemName: {
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 17,
+    color: "#222",
+    marginBottom: 2,
   },
   itemPrice: {
-    color: "#666",
-    marginBottom: 8,
+    color: "#888",
+    fontSize: 15,
+    marginBottom: 2,
   },
   quantityRow: {
     flexDirection: "row",

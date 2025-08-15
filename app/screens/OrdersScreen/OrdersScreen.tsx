@@ -45,14 +45,12 @@ export default function OrdersScreen() {
   if (error) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Orders</Text>
         <Text style={styles.subtitle}>{error}</Text>
       </View>
     );
   }
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Orders</Text>
       {orders.length === 0 ? (
         <Text style={styles.subtitle}>No orders found.</Text>
       ) : (
@@ -61,14 +59,37 @@ export default function OrdersScreen() {
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <View style={styles.orderCard}>
-              <Text style={styles.orderId}>Order #{item.id}</Text>
-              <Text>Status: {item.status}</Text>
-              <Text>Total: Ghc{item.totalAmount || item.total}</Text>
-              <Text>
-                Date:{" "}
-                {item.createdAt?.toDate?.().toLocaleString?.() ||
-                  item.createdAt}
-              </Text>
+              <View style={styles.orderHeader}>
+                <Text style={styles.orderId}>Order #{item.id}</Text>
+                <Text
+                  style={[
+                    styles.status,
+                    {
+                      color:
+                        item.status === "completed"
+                          ? "#27ae60"
+                          : item.status === "pending"
+                          ? "#f39c12"
+                          : "#e74c3c",
+                    },
+                  ]}
+                >
+                  {item.status?.toUpperCase()}
+                </Text>
+              </View>
+              <View style={styles.orderDetailsRow}>
+                <Text style={styles.orderLabel}>Total:</Text>
+                <Text style={styles.orderValue}>
+                  Ghc{item.totalAmount || item.total}
+                </Text>
+              </View>
+              <View style={styles.orderDetailsRow}>
+                <Text style={styles.orderLabel}>Date:</Text>
+                <Text style={styles.orderValue}>
+                  {item.createdAt?.toDate?.().toLocaleString?.() ||
+                    item.createdAt}
+                </Text>
+              </View>
             </View>
           )}
         />
@@ -96,13 +117,42 @@ const styles = StyleSheet.create({
   },
   orderCard: {
     backgroundColor: "#fff",
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    elevation: 2,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+  },
+  orderHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
   },
   orderId: {
     fontWeight: "bold",
-    marginBottom: 4,
+    fontSize: 18,
+    color: "#222",
+  },
+  status: {
+    fontWeight: "bold",
+    fontSize: 14,
+    textTransform: "uppercase",
+  },
+  orderDetailsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 4,
+  },
+  orderLabel: {
+    color: "#888",
+    fontWeight: "600",
+  },
+  orderValue: {
+    color: "#222",
+    fontWeight: "bold",
   },
 });

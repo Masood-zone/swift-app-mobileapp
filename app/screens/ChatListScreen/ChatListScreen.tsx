@@ -6,16 +6,21 @@ import {
   Text,
   StyleSheet,
   FlatList,
+  TextInput,
+  TouchableOpacity,
+  Alert,
   ActivityIndicator,
 } from "react-native";
 import { AuthContext } from "../../contexts/auth/AuthContext";
-import { fetchUserChats } from "../../services/chat";
+import { fetchUserChats, createChat } from "../../services/chat";
 
 export default function ChatListScreen() {
   const { user } = useContext(AuthContext);
   const [chats, setChats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -34,6 +39,29 @@ export default function ChatListScreen() {
     loadChats();
   }, [user]);
 
+  const handleCreateChat = async () => {
+    if (!message.trim()) {
+      Alert.alert("Missing Message", "Please enter a message to start a chat.");
+      return;
+    }
+    if (!user) {
+      Alert.alert("Not logged in", "Please log in to start a chat.");
+      return;
+    }
+    setCreating(true);
+    try {
+      await createChat(user.uid, user.uid, message.trim());
+      setMessage("");
+      // Refresh chat list
+      const data = await fetchUserChats(user.uid);
+      setChats(data);
+    } catch (err: any) {
+      Alert.alert("Error", err.message || "Failed to create chat");
+    } finally {
+      setCreating(false);
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -45,7 +73,6 @@ export default function ChatListScreen() {
   if (error) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Chats</Text>
         <Text style={styles.subtitle}>{error}</Text>
       </View>
     );
@@ -53,7 +80,23 @@ export default function ChatListScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Chats</Text>
+      <View style={styles.inputRow}>
+        <TextInput
+          style={styles.input}
+          placeholder="Type a message to start a chat"
+          value={message}
+          onChangeText={setMessage}
+        />
+        <TouchableOpacity
+          style={styles.createBtn}
+          onPress={handleCreateChat}
+          disabled={creating}
+        >
+          <Text style={styles.createBtnText}>
+            {creating ? "Creating..." : "Start Chat"}
+          </Text>
+        </TouchableOpacity>
+      </View>
       {chats.length === 0 ? (
         <Text style={styles.subtitle}>No conversations found.</Text>
       ) : (

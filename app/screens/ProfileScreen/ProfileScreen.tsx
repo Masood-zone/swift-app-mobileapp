@@ -9,7 +9,6 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Profile</Text>
       {user ? (
         <View style={styles.profileCard}>
           <Text style={styles.label}>Name:</Text>
