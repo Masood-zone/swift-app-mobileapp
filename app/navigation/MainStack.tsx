@@ -21,12 +21,54 @@ export const MainStack: React.FC = () => {
       }}
     >
       <Stack.Screen name="Tabs" component={BottomTabNavigator} />
-      <Stack.Screen name="Restaurant" component={RestaurantScreen} />
-      <Stack.Screen name="Cart" component={CartScreen} />
-      <Stack.Screen name="OrderReview" component={OrderReviewScreen} />
-      <Stack.Screen name="ConfirmOrder" component={ConfirmOrderScreen} />
-      <Stack.Screen name="Checkout" component={CheckoutScreen} />
-      <Stack.Screen name="OrderTracking" component={OrderTrackingScreen} />
+      <Stack.Screen
+        name="Restaurant"
+        component={RestaurantScreen}
+        options={{
+          headerShown: true,
+          headerTitle: "Restaurant",
+        }}
+      />
+      <Stack.Screen
+        name="Cart"
+        component={CartScreen}
+        options={{
+          headerShown: true,
+          headerTitle: "Cart",
+        }}
+      />
+      <Stack.Screen
+        name="OrderReview"
+        component={OrderReviewScreen}
+        options={{
+          headerShown: true,
+          headerTitle: "Order Review",
+        }}
+      />
+      <Stack.Screen
+        name="ConfirmOrder"
+        component={ConfirmOrderScreen}
+        options={{
+          headerShown: true,
+          headerTitle: "Confirm Order",
+        }}
+      />
+      <Stack.Screen
+        name="Checkout"
+        component={CheckoutScreen}
+        options={{
+          headerShown: true,
+          headerTitle: "Checkout",
+        }}
+      />
+      <Stack.Screen
+        name="OrderTracking"
+        component={OrderTrackingScreen}
+        options={{
+          headerShown: true,
+          headerTitle: "Order Tracking",
+        }}
+      />
     </Stack.Navigator>
   );
 };
