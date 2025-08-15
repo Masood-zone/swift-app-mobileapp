@@ -1,5 +1,3 @@
-"use client";
-
 import type React from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import type { Restaurant } from "../../types";

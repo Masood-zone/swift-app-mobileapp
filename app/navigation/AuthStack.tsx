@@ -1,5 +1,3 @@
-"use client";
-
 import type React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 import { ForgotPasswordScreen, LoginScreen, RegisterScreen } from "../screens";
