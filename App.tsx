@@ -1,10 +1,9 @@
-// Migrated App.tsx from sample
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
-import AppNavigator from "./src/navigation/AppNavigator";
-import { AuthProvider } from "./src/contexts/auth/AuthProvider";
-import { CartProvider } from "./src/contexts/cart/CartProvider";
 import "./styles/globals.css";
+import AuthProvider from "./app/contexts/auth/AuthContext";
+import CartProvider from "./app/contexts/cart/CartContext";
+import { AppNavigator } from "./app/navigation";
 
 export default function App() {
   return (
