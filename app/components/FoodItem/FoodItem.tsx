@@ -31,7 +31,7 @@ export default function FoodItem({ item }: FoodItemProps) {
         <Text style={styles.description} numberOfLines={2}>
           {item.description}
         </Text>
-        <Text style={styles.price}>${item.price.toFixed(2)}</Text>
+        <Text style={styles.price}>Ghc{item.price.toFixed(2)}</Text>
       </View>
       <TouchableOpacity style={styles.addButton} onPress={handleAddToCart}>
         <Text style={styles.addButtonText}>+</Text>

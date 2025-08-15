@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { CartContext } from "../../contexts/cart";
@@ -44,6 +45,13 @@ export default function RestaurantScreen({ route, navigation }: Props) {
     loadMenu();
   }, [restaurant.id]);
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#FF6B6B" />
+      </View>
+    );
+  }
   const cartItemCount = cart.reduce((total, item) => total + item.quantity, 0);
 
   return (
@@ -52,7 +60,7 @@ export default function RestaurantScreen({ route, navigation }: Props) {
       <View style={styles.header}>
         <Text style={styles.name}>{restaurant.name}</Text>
         <Text style={styles.info}>
-          {restaurant.cuisine} • {restaurant.deliveryTime} min • $
+          {restaurant.cuisine} • {restaurant.deliveryTime} min • Ghc
           {restaurant.deliveryFee}
         </Text>
       </View>
@@ -112,6 +120,11 @@ const styles = StyleSheet.create({
     padding: 15,
     alignItems: "center",
     elevation: 5,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   cartButtonText: {
     color: "white",

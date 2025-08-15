@@ -11,7 +11,7 @@ import { colors } from "../constants/theme";
 
 const Tab = createBottomTabNavigator();
 
-export const BottomTabNavigator: React.FC = () => {
+export default function BottomTabNavigator() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -51,4 +51,4 @@ export const BottomTabNavigator: React.FC = () => {
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
-};
+}

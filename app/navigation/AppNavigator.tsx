@@ -21,7 +21,13 @@ const AppNavigator: React.FC = () => {
     <>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
-          <Stack.Screen name="Main" component={MainStack} />
+          <Stack.Screen
+            name="Main"
+            component={MainStack}
+            options={{
+              headerShown: false,
+            }}
+          />
         ) : (
           <Stack.Screen name="Auth" component={AuthStack} />
         )}
