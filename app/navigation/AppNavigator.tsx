@@ -10,7 +10,7 @@ import { LoadingScreen } from "../screens";
 
 const Stack = createStackNavigator();
 
-const AppNavigator: React.FC = () => {
+export default function AppNavigator() {
   const { user, loading } = useContext(AuthContext);
 
   if (loading) {
@@ -21,19 +21,11 @@ const AppNavigator: React.FC = () => {
     <>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
-          <Stack.Screen
-            name="Main"
-            component={MainStack}
-            options={{
-              headerShown: false,
-            }}
-          />
+          <Stack.Screen name="Main" component={MainStack} />
         ) : (
           <Stack.Screen name="Auth" component={AuthStack} />
         )}
       </Stack.Navigator>
     </>
   );
-};
-
-export default AppNavigator;
+}
