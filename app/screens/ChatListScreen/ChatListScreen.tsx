@@ -145,4 +145,25 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 4,
   },
+  inputRow: {
+    flexDirection: "row",
+    marginBottom: 16,
+  },
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 4,
+    padding: 12,
+    marginRight: 8,
+  },
+  createBtn: {
+    backgroundColor: "#FF6B6B",
+    borderRadius: 4,
+    padding: 12,
+  },
+  createBtnText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
 });

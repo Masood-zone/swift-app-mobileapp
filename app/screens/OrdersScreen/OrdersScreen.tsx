@@ -64,7 +64,7 @@ export default function OrdersScreen() {
                     styles.status,
                     {
                       color:
-                        item.status === "completed"
+                        item.status === "delivered"
                           ? "#27ae60"
                           : item.status === "pending"
                           ? "#f39c12"
