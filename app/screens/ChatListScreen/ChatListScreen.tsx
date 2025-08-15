@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { View, Text, StyleSheet } from "react-native"
+import type React from "react";
+import { View, Text, StyleSheet } from "react-native";
 
-const ChatListScreen: React.FC = () => {
+export default function ChatListScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Chats</Text>
       <Text style={styles.subtitle}>Your conversations will appear here</Text>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -28,6 +28,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
   },
-})
-
-export default ChatListScreen
+});

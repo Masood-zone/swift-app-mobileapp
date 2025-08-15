@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { View, Text, StyleSheet } from "react-native"
+import type React from "react";
+import { View, Text, StyleSheet } from "react-native";
 
-const OrdersScreen: React.FC = () => {
+export default function OrdersScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Orders</Text>
       <Text style={styles.subtitle}>Your order history will appear here</Text>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -28,6 +28,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
   },
-})
-
-export default OrdersScreen
+});
