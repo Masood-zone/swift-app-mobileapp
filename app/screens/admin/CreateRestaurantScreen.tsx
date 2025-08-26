@@ -1,22 +1,31 @@
-"use client"
-
-import { useState } from "react"
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView, Image } from "react-native"
-import { useNavigation, useRoute } from "@react-navigation/native"
-import * as ImagePicker from "expo-image-picker"
-import { Ionicons } from "@expo/vector-icons"
-import { createRestaurant, updateRestaurant, uploadRestaurantImage } from "../../services/admin/restaurants"
-import type { Restaurant } from "../../types"
+import { theme } from "@/app/constants";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { useState } from "react";
+import {
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import {
+  createRestaurant,
+  updateRestaurant,
+} from "../../services/admin/restaurants";
+import type { Restaurant } from "../../types";
 
 interface RouteParams {
-  restaurant?: Restaurant
+  restaurant?: Restaurant;
 }
 
 export function CreateRestaurantScreen() {
-  const navigation = useNavigation()
-  const route = useRoute()
-  const { restaurant } = (route.params as RouteParams) || {}
-  const isEditing = !!restaurant
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { restaurant } = (route.params as RouteParams) || {};
+  const isEditing = !!restaurant;
 
   const [formData, setFormData] = useState({
     name: restaurant?.name || "",
@@ -25,222 +34,281 @@ export function CreateRestaurantScreen() {
     deliveryFee: restaurant?.deliveryFee?.toString() || "",
     rating: restaurant?.rating?.toString() || "",
     image: restaurant?.image || "",
-  })
-  const [loading, setLoading] = useState(false)
+  });
+  const [loading, setLoading] = useState(false);
 
-  const handleImagePicker = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
-    if (status !== "granted") {
-      Alert.alert("Permission Required", "Please grant camera roll permissions to upload images.")
-      return
+  const validateImageUrl = (url: string) => {
+    if (!url) return true; // Empty URL is allowed
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
     }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [16, 9],
-      quality: 0.8,
-    })
-
-    if (!result.canceled) {
-      setFormData((prev) => ({ ...prev, image: result.assets[0].uri }))
-    }
-  }
+  };
 
   const handleSubmit = async () => {
     if (!formData.name.trim() || !formData.cuisine.trim()) {
-      Alert.alert("Validation Error", "Please fill in all required fields.")
-      return
+      Alert.alert("Validation Error", "Please fill in all required fields.");
+      return;
     }
 
-    setLoading(true)
+    if (formData.image && !validateImageUrl(formData.image)) {
+      Alert.alert("Validation Error", "Please enter a valid image URL.");
+      return;
+    }
+
+    setLoading(true);
     try {
       const restaurantData = {
         name: formData.name.trim(),
         cuisine: formData.cuisine.trim(),
         deliveryTime: Number.parseInt(formData.deliveryTime) || 30,
         deliveryFee: Number.parseFloat(formData.deliveryFee) || 0,
-        rating: formData.rating ? Number.parseFloat(formData.rating) : undefined,
-        image: formData.image,
-      }
+        rating: formData.rating
+          ? Number.parseFloat(formData.rating)
+          : undefined,
+        image: formData.image.trim() || undefined,
+      };
 
       if (isEditing && restaurant) {
-        // Upload new image if changed
-        if (formData.image && formData.image !== restaurant.image) {
-          const imageUrl = await uploadRestaurantImage(formData.image, restaurant.id)
-          restaurantData.image = imageUrl
-        }
-        await updateRestaurant(restaurant.id, restaurantData)
-        Alert.alert("Success", "Restaurant updated successfully")
+        await updateRestaurant(restaurant.id, restaurantData);
+        Alert.alert("Success", "Restaurant updated successfully");
       } else {
-        const restaurantId = await createRestaurant(restaurantData)
-        // Upload image if provided
-        if (formData.image) {
-          const imageUrl = await uploadRestaurantImage(formData.image, restaurantId)
-          await updateRestaurant(restaurantId, { image: imageUrl })
-        }
-        Alert.alert("Success", "Restaurant created successfully")
+        await createRestaurant(restaurantData);
+        Alert.alert("Success", "Restaurant created successfully");
       }
 
-      navigation.goBack()
+      navigation.goBack();
     } catch (error) {
-      Alert.alert("Error", `Failed to ${isEditing ? "update" : "create"} restaurant`)
+      Alert.alert(
+        "Error",
+        `Failed to ${isEditing ? "update" : "create"} restaurant`
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <View style={styles.form}>
         <View style={styles.imageSection}>
-          <Text style={styles.label}>Restaurant Image</Text>
-          <TouchableOpacity style={styles.imagePicker} onPress={handleImagePicker}>
-            {formData.image ? (
-              <Image source={{ uri: formData.image }} style={styles.previewImage} />
-            ) : (
-              <View style={styles.imagePlaceholder}>
-                <Ionicons name="camera" size={32} color="#9ca3af" />
-                <Text style={styles.imagePlaceholderText}>Tap to add image</Text>
-              </View>
-            )}
-          </TouchableOpacity>
+          <Text style={[styles.label, { color: theme.colors.text }]}>
+            Restaurant Image URL
+          </Text>
+          <TextInput
+            style={[
+              styles.input,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                color: theme.colors.text,
+              },
+            ]}
+            value={formData.image}
+            onChangeText={(text) =>
+              setFormData((prev) => ({ ...prev, image: text }))
+            }
+            placeholder="Enter image URL (optional)"
+            placeholderTextColor={theme.colors.textSecondary}
+          />
+          {formData.image && validateImageUrl(formData.image) && (
+            <View style={styles.imagePreview}>
+              <Image
+                source={{ uri: formData.image }}
+                style={styles.previewImage}
+              />
+            </View>
+          )}
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Restaurant Name *</Text>
+          <Text style={[styles.label, { color: theme.colors.text }]}>
+            Restaurant Name *
+          </Text>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                color: theme.colors.text,
+              },
+            ]}
             value={formData.name}
-            onChangeText={(text) => setFormData((prev) => ({ ...prev, name: text }))}
+            onChangeText={(text) =>
+              setFormData((prev) => ({ ...prev, name: text }))
+            }
             placeholder="Enter restaurant name"
+            placeholderTextColor={theme.colors.textSecondary}
           />
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Cuisine Type *</Text>
+          <Text style={[styles.label, { color: theme.colors.text }]}>
+            Cuisine Type *
+          </Text>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                color: theme.colors.text,
+              },
+            ]}
             value={formData.cuisine}
-            onChangeText={(text) => setFormData((prev) => ({ ...prev, cuisine: text }))}
+            onChangeText={(text) =>
+              setFormData((prev) => ({ ...prev, cuisine: text }))
+            }
             placeholder="e.g., Italian, Chinese, Mexican"
+            placeholderTextColor={theme.colors.textSecondary}
           />
         </View>
 
         <View style={styles.row}>
           <View style={[styles.inputGroup, styles.halfWidth]}>
-            <Text style={styles.label}>Delivery Time (min)</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>
+              Delivery Time (min)
+            </Text>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                  color: theme.colors.text,
+                },
+              ]}
               value={formData.deliveryTime}
-              onChangeText={(text) => setFormData((prev) => ({ ...prev, deliveryTime: text }))}
+              onChangeText={(text) =>
+                setFormData((prev) => ({ ...prev, deliveryTime: text }))
+              }
               placeholder="30"
+              placeholderTextColor={theme.colors.textSecondary}
               keyboardType="numeric"
             />
           </View>
 
           <View style={[styles.inputGroup, styles.halfWidth]}>
-            <Text style={styles.label}>Delivery Fee ($)</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>
+              Delivery Fee (Ghc)
+            </Text>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                  color: theme.colors.text,
+                },
+              ]}
               value={formData.deliveryFee}
-              onChangeText={(text) => setFormData((prev) => ({ ...prev, deliveryFee: text }))}
+              onChangeText={(text) =>
+                setFormData((prev) => ({ ...prev, deliveryFee: text }))
+              }
               placeholder="2.99"
+              placeholderTextColor={theme.colors.textSecondary}
               keyboardType="decimal-pad"
             />
           </View>
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Rating (1-5)</Text>
+          <Text style={[styles.label, { color: theme.colors.text }]}>
+            Rating (1-5)
+          </Text>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                color: theme.colors.text,
+              },
+            ]}
             value={formData.rating}
-            onChangeText={(text) => setFormData((prev) => ({ ...prev, rating: text }))}
+            onChangeText={(text) =>
+              setFormData((prev) => ({ ...prev, rating: text }))
+            }
             placeholder="4.5"
+            placeholderTextColor={theme.colors.textSecondary}
             keyboardType="decimal-pad"
           />
         </View>
 
         <TouchableOpacity
-          style={[styles.submitButton, loading && styles.disabledButton]}
+          style={[
+            styles.submitButton,
+            { backgroundColor: theme.colors.primary },
+            loading && styles.disabledButton,
+          ]}
           onPress={handleSubmit}
           disabled={loading}
         >
           <Text style={styles.submitButtonText}>
-            {loading ? "Saving..." : isEditing ? "Update Restaurant" : "Create Restaurant"}
+            {loading
+              ? "Saving..."
+              : isEditing
+              ? "Update Restaurant"
+              : "Create Restaurant"}
           </Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
   },
   form: {
-    padding: 16,
-    gap: 20,
+    padding: theme.spacing.lg,
+    gap: theme.spacing.lg,
   },
   imageSection: {
-    alignItems: "center",
+    gap: theme.spacing.sm,
   },
-  imagePicker: {
+  imagePreview: {
     width: "100%",
     height: 200,
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: "hidden",
+    marginTop: theme.spacing.sm,
   },
   previewImage: {
     width: "100%",
     height: "100%",
   },
-  imagePlaceholder: {
-    flex: 1,
-    backgroundColor: "#f3f4f6",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: "#e5e7eb",
-    borderStyle: "dashed",
-  },
-  imagePlaceholderText: {
-    marginTop: 8,
-    color: "#9ca3af",
-    fontSize: 14,
-  },
   inputGroup: {
-    gap: 8,
+    gap: theme.spacing.sm,
   },
   label: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#374151",
   },
   input: {
-    backgroundColor: "#ffffff",
     borderWidth: 1,
-    borderColor: "#d1d5db",
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 12,
+    padding: theme.spacing.md,
     fontSize: 16,
   },
   row: {
     flexDirection: "row",
-    gap: 12,
+    gap: theme.spacing.md,
   },
   halfWidth: {
     flex: 1,
   },
   submitButton: {
-    backgroundColor: "#2563eb",
-    padding: 16,
-    borderRadius: 8,
+    padding: theme.spacing.lg,
+    borderRadius: 12,
     alignItems: "center",
-    marginTop: 20,
+    marginTop: theme.spacing.lg,
   },
   disabledButton: {
     opacity: 0.6,
@@ -250,4 +318,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-})
+});

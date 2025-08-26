@@ -1,27 +1,25 @@
-"use client"
-
-import { useState, useEffect } from "react"
+import { Ionicons } from "@expo/vector-icons";
+import { Picker } from "@react-native-picker/picker";
+import { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
   Alert,
-  RefreshControl,
+  FlatList,
   Modal,
-  TextInput,
+  RefreshControl,
   ScrollView,
-} from "react-native"
-import { Picker } from "@react-native-picker/picker"
-import { Ionicons } from "@expo/vector-icons"
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import type { AdminOrder } from "../../services/admin/orders";
 import {
   fetchAllOrdersAdmin,
-  updateOrderStatus,
-  updateOrderDeliveryAddress,
   getOrderStats,
-} from "../../services/admin/orders"
-import type { AdminOrder } from "../../services/admin/orders"
+  updateOrderDeliveryAddress,
+  updateOrderStatus,
+} from "../../services/admin/orders";
 
 const STATUS_COLORS = {
   pending: "#f59e0b",
@@ -30,7 +28,7 @@ const STATUS_COLORS = {
   "on-the-way": "#06b6d4",
   delivered: "#10b981",
   cancelled: "#ef4444",
-}
+};
 
 const STATUS_LABELS = {
   pending: "Pending",
@@ -39,121 +37,157 @@ const STATUS_LABELS = {
   "on-the-way": "On the Way",
   delivered: "Delivered",
   cancelled: "Cancelled",
-}
+};
 
 export function OrderTrackingScreen() {
-  const [orders, setOrders] = useState<AdminOrder[]>([])
-  const [filteredOrders, setFilteredOrders] = useState<AdminOrder[]>([])
-  const [selectedStatus, setSelectedStatus] = useState<string>("all")
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
-  const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null)
-  const [modalVisible, setModalVisible] = useState(false)
-  const [editingAddress, setEditingAddress] = useState(false)
-  const [newAddress, setNewAddress] = useState("")
-  const [stats, setStats] = useState<any>(null)
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
+  const [filteredOrders, setFilteredOrders] = useState<AdminOrder[]>([]);
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editingAddress, setEditingAddress] = useState(false);
+  const [newAddress, setNewAddress] = useState("");
+  const [stats, setStats] = useState<any>(null);
 
   const loadData = async () => {
     try {
-      const [ordersData, statsData] = await Promise.all([fetchAllOrdersAdmin(), getOrderStats()])
-      setOrders(ordersData)
-      setFilteredOrders(ordersData)
-      setStats(statsData)
+      const [ordersData, statsData] = await Promise.all([
+        fetchAllOrdersAdmin(),
+        getOrderStats(),
+      ]);
+      setOrders(ordersData);
+      setFilteredOrders(ordersData);
+      setStats(statsData);
     } catch (error) {
-      Alert.alert("Error", "Failed to load orders")
+      Alert.alert("Error", "Failed to load orders");
     } finally {
-      setLoading(false)
-      setRefreshing(false)
+      setLoading(false);
+      setRefreshing(false);
     }
-  }
+  };
 
   useEffect(() => {
-    loadData()
-  }, [])
+    loadData();
+  }, []);
 
   useEffect(() => {
     if (selectedStatus === "all") {
-      setFilteredOrders(orders)
+      setFilteredOrders(orders);
     } else {
-      setFilteredOrders(orders.filter((order) => order.status === selectedStatus))
+      setFilteredOrders(
+        orders.filter((order) => order.status === selectedStatus)
+      );
     }
-  }, [selectedStatus, orders])
+  }, [selectedStatus, orders]);
 
   const handleRefresh = () => {
-    setRefreshing(true)
-    loadData()
-  }
+    setRefreshing(true);
+    loadData();
+  };
 
-  const handleStatusUpdate = async (orderId: string, newStatus: AdminOrder["status"]) => {
+  const handleStatusUpdate = async (
+    orderId: string,
+    newStatus: AdminOrder["status"]
+  ) => {
     try {
-      await updateOrderStatus(orderId, newStatus)
-      setOrders((prev) => prev.map((order) => (order.id === orderId ? { ...order, status: newStatus } : order)))
+      await updateOrderStatus(orderId, newStatus);
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.id === orderId ? { ...order, status: newStatus } : order
+        )
+      );
       if (selectedOrder?.id === orderId) {
-        setSelectedOrder((prev) => (prev ? { ...prev, status: newStatus } : null))
+        setSelectedOrder((prev) =>
+          prev ? { ...prev, status: newStatus } : null
+        );
       }
-      Alert.alert("Success", "Order status updated successfully")
+      Alert.alert("Success", "Order status updated successfully");
     } catch (error) {
-      Alert.alert("Error", "Failed to update order status")
+      Alert.alert("Error", "Failed to update order status");
     }
-  }
+  };
 
   const handleAddressUpdate = async () => {
-    if (!selectedOrder || !newAddress.trim()) return
+    if (!selectedOrder || !newAddress.trim()) return;
 
     try {
-      await updateOrderDeliveryAddress(selectedOrder.id, newAddress.trim())
+      await updateOrderDeliveryAddress(selectedOrder.id, newAddress.trim());
       setOrders((prev) =>
-        prev.map((order) => (order.id === selectedOrder.id ? { ...order, deliveryAddress: newAddress.trim() } : order)),
-      )
-      setSelectedOrder((prev) => (prev ? { ...prev, deliveryAddress: newAddress.trim() } : null))
-      setEditingAddress(false)
-      setNewAddress("")
-      Alert.alert("Success", "Delivery address updated successfully")
+        prev.map((order) =>
+          order.id === selectedOrder.id
+            ? { ...order, deliveryAddress: newAddress.trim() }
+            : order
+        )
+      );
+      setSelectedOrder((prev) =>
+        prev ? { ...prev, deliveryAddress: newAddress.trim() } : null
+      );
+      setEditingAddress(false);
+      setNewAddress("");
+      Alert.alert("Success", "Delivery address updated successfully");
     } catch (error) {
-      Alert.alert("Error", "Failed to update delivery address")
+      Alert.alert("Error", "Failed to update delivery address");
     }
-  }
+  };
 
   const openOrderDetails = (order: AdminOrder) => {
-    setSelectedOrder(order)
-    setNewAddress(order.deliveryAddress)
-    setModalVisible(true)
-  }
+    setSelectedOrder(order);
+    setNewAddress(order.deliveryAddress);
+    setModalVisible(true);
+  };
 
   const formatDate = (timestamp: any) => {
-    if (!timestamp) return "N/A"
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp)
-    return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-  }
+    if (!timestamp) return "N/A";
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    return (
+      date.toLocaleDateString() +
+      " " +
+      date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    );
+  };
 
   const renderOrderCard = ({ item }: { item: AdminOrder }) => (
-    <TouchableOpacity style={styles.orderCard} onPress={() => openOrderDetails(item)}>
+    <TouchableOpacity
+      style={styles.orderCard}
+      onPress={() => openOrderDetails(item)}
+    >
       <View style={styles.orderHeader}>
-        <Text style={styles.orderId}>Order #{item.id.slice(-6).toUpperCase()}</Text>
-        <View style={[styles.statusBadge, { backgroundColor: STATUS_COLORS[item.status] }]}>
+        <Text style={styles.orderId}>
+          Order #{item.id.slice(-6).toUpperCase()}
+        </Text>
+        <View
+          style={[
+            styles.statusBadge,
+            { backgroundColor: STATUS_COLORS[item.status] },
+          ]}
+        >
           <Text style={styles.statusText}>{STATUS_LABELS[item.status]}</Text>
         </View>
       </View>
 
       <View style={styles.orderInfo}>
-        <Text style={styles.customerName}>{item.userName || "Unknown Customer"}</Text>
+        <Text style={styles.customerName}>
+          {item.userName || "Unknown Customer"}
+        </Text>
         <Text style={styles.customerEmail}>{item.userEmail || "No email"}</Text>
         <Text style={styles.orderDate}>{formatDate(item.createdAt)}</Text>
       </View>
 
       <View style={styles.orderDetails}>
         <Text style={styles.itemCount}>{item.items.length} items</Text>
-        <Text style={styles.totalAmount}>${item.total.toFixed(2)}</Text>
+        <Text style={styles.totalAmount}>Ghc{item.total}</Text>
       </View>
 
       <Text style={styles.deliveryAddress} numberOfLines={1}>
         📍 {item.deliveryAddress}
       </Text>
     </TouchableOpacity>
-  )
+  );
 
   const renderStatsCard = () => {
-    if (!stats) return null
+    if (!stats) return null;
 
     return (
       <View style={styles.statsContainer}>
@@ -172,13 +206,15 @@ export function OrderTrackingScreen() {
             <Text style={styles.statLabel}>Pending</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>${stats.totalRevenue.toFixed(0)}</Text>
+            <Text style={styles.statNumber}>
+              Ghc{stats.totalRevenue.toFixed(0)}
+            </Text>
             <Text style={styles.statLabel}>Revenue</Text>
           </View>
         </View>
       </View>
-    )
-  }
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -210,18 +246,26 @@ export function OrderTrackingScreen() {
         renderItem={renderOrderCard}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Ionicons name="receipt" size={64} color="#9ca3af" />
             <Text style={styles.emptyText}>No orders found</Text>
-            <Text style={styles.emptySubtext}>Orders will appear here when customers place them</Text>
+            <Text style={styles.emptySubtext}>
+              Orders will appear here when customers place them
+            </Text>
           </View>
         }
       />
 
       {/* Order Details Modal */}
-      <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet">
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Order Details</Text>
@@ -234,11 +278,21 @@ export function OrderTrackingScreen() {
             <ScrollView style={styles.modalContent}>
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Order Information</Text>
-                <Text style={styles.detailText}>Order ID: #{selectedOrder.id.slice(-6).toUpperCase()}</Text>
-                <Text style={styles.detailText}>Date: {formatDate(selectedOrder.createdAt)}</Text>
-                <Text style={styles.detailText}>Customer: {selectedOrder.userName || "Unknown"}</Text>
-                <Text style={styles.detailText}>Email: {selectedOrder.userEmail || "No email"}</Text>
-                <Text style={styles.detailText}>Total: ${selectedOrder.total.toFixed(2)}</Text>
+                <Text style={styles.detailText}>
+                  Order ID: #{selectedOrder.id.slice(-6).toUpperCase()}
+                </Text>
+                <Text style={styles.detailText}>
+                  Date: {formatDate(selectedOrder.createdAt)}
+                </Text>
+                <Text style={styles.detailText}>
+                  Customer: {selectedOrder.userName || "Unknown"}
+                </Text>
+                <Text style={styles.detailText}>
+                  Email: {selectedOrder.userEmail || "No email"}
+                </Text>
+                <Text style={styles.detailText}>
+                  Total: ${selectedOrder.total.toFixed(2)}
+                </Text>
               </View>
 
               <View style={styles.section}>
@@ -246,7 +300,9 @@ export function OrderTrackingScreen() {
                 <View style={styles.pickerContainer}>
                   <Picker
                     selectedValue={selectedOrder.status}
-                    onValueChange={(value) => handleStatusUpdate(selectedOrder.id, value)}
+                    onValueChange={(value) =>
+                      handleStatusUpdate(selectedOrder.id, value)
+                    }
                     style={styles.picker}
                   >
                     <Picker.Item label="Pending" value="pending" />
@@ -262,7 +318,9 @@ export function OrderTrackingScreen() {
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <Text style={styles.sectionTitle}>Delivery Address</Text>
-                  <TouchableOpacity onPress={() => setEditingAddress(!editingAddress)}>
+                  <TouchableOpacity
+                    onPress={() => setEditingAddress(!editingAddress)}
+                  >
                     <Ionicons name="pencil" size={20} color="#2563eb" />
                   </TouchableOpacity>
                 </View>
@@ -276,14 +334,17 @@ export function OrderTrackingScreen() {
                       numberOfLines={3}
                     />
                     <View style={styles.addressActions}>
-                      <TouchableOpacity style={styles.saveButton} onPress={handleAddressUpdate}>
+                      <TouchableOpacity
+                        style={styles.saveButton}
+                        onPress={handleAddressUpdate}
+                      >
                         <Text style={styles.saveButtonText}>Save</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={styles.cancelButton}
                         onPress={() => {
-                          setEditingAddress(false)
-                          setNewAddress(selectedOrder.deliveryAddress)
+                          setEditingAddress(false);
+                          setNewAddress(selectedOrder.deliveryAddress);
                         }}
                       >
                         <Text style={styles.cancelButtonText}>Cancel</Text>
@@ -291,7 +352,9 @@ export function OrderTrackingScreen() {
                     </View>
                   </View>
                 ) : (
-                  <Text style={styles.addressText}>{selectedOrder.deliveryAddress}</Text>
+                  <Text style={styles.addressText}>
+                    {selectedOrder.deliveryAddress}
+                  </Text>
                 )}
               </View>
 
@@ -301,7 +364,8 @@ export function OrderTrackingScreen() {
                   <View key={index} style={styles.orderItem}>
                     <Text style={styles.itemName}>{item.name}</Text>
                     <Text style={styles.itemDetails}>
-                      Qty: {item.quantity} × ${item.price.toFixed(2)} = ${(item.quantity * item.price).toFixed(2)}
+                      Qty: {item.quantity} × Ghc{item.price.toFixed(2)} = $
+                      {(item.quantity * item.price).toFixed(2)}
                     </Text>
                   </View>
                 ))}
@@ -311,7 +375,7 @@ export function OrderTrackingScreen() {
         </View>
       </Modal>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -356,9 +420,11 @@ const styles = StyleSheet.create({
   },
   filterContainer: {
     gap: 8,
+    height: "auto",
   },
   filterLabel: {
     fontSize: 14,
+    height: 32,
     fontWeight: "600",
     color: "#374151",
   },
@@ -557,4 +623,4 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#6b7280",
   },
-})
+});

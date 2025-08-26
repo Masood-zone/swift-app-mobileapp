@@ -1,53 +1,68 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl, Image } from "react-native"
-import { useNavigation } from "@react-navigation/native"
-import { Picker } from "@react-native-picker/picker"
-import { Ionicons } from "@expo/vector-icons"
-import { fetchAllMenuItemsAdmin, deleteMenuItem } from "../../services/admin/menu"
-import { fetchAllRestaurantsAdmin } from "../../services/admin/restaurants"
-import type { MenuItem, Restaurant } from "../../types"
+import { Ionicons } from "@expo/vector-icons";
+import { Picker } from "@react-native-picker/picker";
+import { useNavigation } from "@react-navigation/native";
+import { useEffect, useState } from "react";
+import {
+  Alert,
+  FlatList,
+  Image,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import {
+  deleteMenuItem,
+  fetchAllMenuItemsAdmin,
+} from "../../services/admin/menu";
+import { fetchAllRestaurantsAdmin } from "../../services/admin/restaurants";
+import type { MenuItem, Restaurant } from "../../types";
 
 export function MenuManagementScreen() {
-  const navigation = useNavigation()
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([])
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([])
-  const [filteredItems, setFilteredItems] = useState<MenuItem[]>([])
-  const [selectedRestaurant, setSelectedRestaurant] = useState<string>("all")
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
+  const navigation = useNavigation();
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [filteredItems, setFilteredItems] = useState<MenuItem[]>([]);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<string>("all");
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadData = async () => {
     try {
-      const [menuData, restaurantData] = await Promise.all([fetchAllMenuItemsAdmin(), fetchAllRestaurantsAdmin()])
-      setMenuItems(menuData)
-      setRestaurants(restaurantData)
-      setFilteredItems(menuData)
+      const [menuData, restaurantData] = await Promise.all([
+        fetchAllMenuItemsAdmin(),
+        fetchAllRestaurantsAdmin(),
+      ]);
+      setMenuItems(menuData);
+      setRestaurants(restaurantData);
+      setFilteredItems(menuData);
     } catch (error) {
-      Alert.alert("Error", "Failed to load menu items")
+      Alert.alert("Error", "Failed to load menu items");
     } finally {
-      setLoading(false)
-      setRefreshing(false)
+      setLoading(false);
+      setRefreshing(false);
     }
-  }
+  };
 
   useEffect(() => {
-    loadData()
-  }, [])
+    loadData();
+  }, []);
 
   useEffect(() => {
     if (selectedRestaurant === "all") {
-      setFilteredItems(menuItems)
+      setFilteredItems(menuItems);
     } else {
-      setFilteredItems(menuItems.filter((item) => item.restaurantId === selectedRestaurant))
+      setFilteredItems(
+        menuItems.filter((item) => item.restaurantId === selectedRestaurant)
+      );
     }
-  }, [selectedRestaurant, menuItems])
+  }, [selectedRestaurant, menuItems]);
 
   const handleRefresh = () => {
-    setRefreshing(true)
-    loadData()
-  }
+    setRefreshing(true);
+    loadData();
+  };
 
   const handleDeleteMenuItem = (menuItem: MenuItem) => {
     Alert.alert(
@@ -60,50 +75,64 @@ export function MenuManagementScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              await deleteMenuItem(menuItem.id)
-              setMenuItems((prev) => prev.filter((item) => item.id !== menuItem.id))
-              Alert.alert("Success", "Menu item deleted successfully")
+              await deleteMenuItem(menuItem.id);
+              setMenuItems((prev) =>
+                prev.filter((item) => item.id !== menuItem.id)
+              );
+              Alert.alert("Success", "Menu item deleted successfully");
             } catch (error) {
-              Alert.alert("Error", "Failed to delete menu item")
+              Alert.alert("Error", "Failed to delete menu item");
             }
           },
         },
-      ],
-    )
-  }
+      ]
+    );
+  };
 
   const getRestaurantName = (restaurantId: string) => {
-    const restaurant = restaurants.find((r) => r.id === restaurantId)
-    return restaurant?.name || "Unknown Restaurant"
-  }
+    const restaurant = restaurants.find((r) => r.id === restaurantId);
+    return restaurant?.name || "Unknown Restaurant";
+  };
 
   const renderMenuItem = ({ item }: { item: MenuItem }) => (
     <View style={styles.menuItemCard}>
-      <Image source={{ uri: item.image || "/generic-food-item.png" }} style={styles.menuItemImage} />
+      <Image
+        source={{ uri: item.image || "/generic-food-item.png" }}
+        style={styles.menuItemImage}
+      />
       <View style={styles.menuItemInfo}>
         <Text style={styles.menuItemName}>{item.name}</Text>
-        <Text style={styles.restaurantName}>{getRestaurantName(item.restaurantId)}</Text>
+        <Text style={styles.restaurantName}>
+          {getRestaurantName(item.restaurantId)}
+        </Text>
         <Text style={styles.menuItemDescription} numberOfLines={2}>
           {item.description}
         </Text>
         <View style={styles.menuItemDetails}>
           <Text style={styles.priceText}>${item.price.toFixed(2)}</Text>
-          {item.category && <Text style={styles.categoryText}>{item.category}</Text>}
+          {item.category && (
+            <Text style={styles.categoryText}>{item.category}</Text>
+          )}
         </View>
       </View>
       <View style={styles.actions}>
         <TouchableOpacity
           style={styles.editButton}
-          onPress={() => navigation.navigate("CreateMenuItem" as never, { menuItem: item } as never)}
+          onPress={() =>
+            navigation.navigate("CreateMenuItem", { menuItem: item })
+          }
         >
           <Ionicons name="pencil" size={20} color="#2563eb" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteMenuItem(item)}>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => handleDeleteMenuItem(item)}
+        >
           <Ionicons name="trash" size={20} color="#dc2626" />
         </TouchableOpacity>
       </View>
     </View>
-  )
+  );
 
   return (
     <View style={styles.container}>
@@ -118,13 +147,20 @@ export function MenuManagementScreen() {
             >
               <Picker.Item label="All Restaurants" value="all" />
               {restaurants.map((restaurant) => (
-                <Picker.Item key={restaurant.id} label={restaurant.name} value={restaurant.id} />
+                <Picker.Item
+                  key={restaurant.id}
+                  label={restaurant.name}
+                  value={restaurant.id}
+                />
               ))}
             </Picker>
           </View>
         </View>
-        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate("CreateMenuItem" as never)}>
-          <Ionicons name="add" size={24} color="#ffffff" />
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => navigation.navigate("CreateMenuItem" as never)}
+        >
+          <Ionicons name="add" size={20} color="#fff" />
           <Text style={styles.addButtonText}>Add Menu Item</Text>
         </TouchableOpacity>
       </View>
@@ -134,17 +170,21 @@ export function MenuManagementScreen() {
         renderItem={renderMenuItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Ionicons name="fast-food" size={64} color="#9ca3af" />
             <Text style={styles.emptyText}>No menu items found</Text>
-            <Text style={styles.emptySubtext}>Add your first menu item to get started</Text>
+            <Text style={styles.emptySubtext}>
+              Add your first menu item to get started
+            </Text>
           </View>
         }
       />
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -279,4 +319,4 @@ const styles = StyleSheet.create({
     color: "#9ca3af",
     marginTop: 4,
   },
-})
+});

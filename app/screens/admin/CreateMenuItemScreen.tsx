@@ -1,28 +1,43 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, ScrollView, Image } from "react-native"
-import { useNavigation, useRoute } from "@react-navigation/native"
-import { Picker } from "@react-native-picker/picker"
-import * as ImagePicker from "expo-image-picker"
-import { Ionicons } from "@expo/vector-icons"
-import { createMenuItem, updateMenuItem, uploadMenuItemImage } from "../../services/admin/menu"
-import { fetchAllRestaurantsAdmin } from "../../services/admin/restaurants"
-import type { MenuItem, Restaurant } from "../../types"
+import { theme } from "@/app/constants";
+import { Picker } from "@react-native-picker/picker";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { useEffect, useState } from "react";
+import {
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { createMenuItem, updateMenuItem } from "../../services/admin/menu";
+import { fetchAllRestaurantsAdmin } from "../../services/admin/restaurants";
+import type { MenuItem, Restaurant } from "../../types";
 
 interface RouteParams {
-  menuItem?: MenuItem
+  menuItem?: MenuItem;
 }
 
-const CATEGORIES = ["Appetizers", "Main Course", "Desserts", "Beverages", "Salads", "Soups", "Sides", "Specials"]
+const CATEGORIES = [
+  "Appetizers",
+  "Main Course",
+  "Desserts",
+  "Beverages",
+  "Salads",
+  "Soups",
+  "Sides",
+  "Specials",
+];
 
 export function CreateMenuItemScreen() {
-  const navigation = useNavigation()
-  const route = useRoute()
-  const { menuItem } = (route.params as RouteParams) || {}
-  const isEditing = !!menuItem
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { menuItem } = (route.params as RouteParams) || {};
+  const isEditing = !!menuItem;
 
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([])
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [formData, setFormData] = useState({
     name: menuItem?.name || "",
     description: menuItem?.description || "",
@@ -30,58 +45,59 @@ export function CreateMenuItemScreen() {
     category: menuItem?.category || "",
     restaurantId: menuItem?.restaurantId || "",
     image: menuItem?.image || "",
-  })
-  const [loading, setLoading] = useState(false)
+  });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadRestaurants()
-  }, [])
+    loadRestaurants();
+  }, []);
 
   const loadRestaurants = async () => {
     try {
-      const data = await fetchAllRestaurantsAdmin()
-      setRestaurants(data)
+      const data = await fetchAllRestaurantsAdmin();
+      setRestaurants(data);
       // Set first restaurant as default if creating new item
       if (!isEditing && data.length > 0 && !formData.restaurantId) {
-        setFormData((prev) => ({ ...prev, restaurantId: data[0].id }))
+        setFormData((prev) => ({ ...prev, restaurantId: data[0].id }));
       }
     } catch (error) {
-      Alert.alert("Error", "Failed to load restaurants")
+      Alert.alert("Error", "Failed to load restaurants");
     }
-  }
+  };
 
-  const handleImagePicker = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
-    if (status !== "granted") {
-      Alert.alert("Permission Required", "Please grant camera roll permissions to upload images.")
-      return
+  const validateImageUrl = (url: string) => {
+    if (!url) return true; // Empty URL is allowed
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
     }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    })
-
-    if (!result.canceled) {
-      setFormData((prev) => ({ ...prev, image: result.assets[0].uri }))
-    }
-  }
+  };
 
   const handleSubmit = async () => {
-    if (!formData.name.trim() || !formData.description.trim() || !formData.price.trim() || !formData.restaurantId) {
-      Alert.alert("Validation Error", "Please fill in all required fields.")
-      return
+    if (
+      !formData.name.trim() ||
+      !formData.description.trim() ||
+      !formData.price.trim() ||
+      !formData.restaurantId
+    ) {
+      Alert.alert("Validation Error", "Please fill in all required fields.");
+      return;
     }
 
-    const price = Number.parseFloat(formData.price)
+    const price = Number.parseFloat(formData.price);
     if (Number.isNaN(price) || price <= 0) {
-      Alert.alert("Validation Error", "Please enter a valid price.")
-      return
+      Alert.alert("Validation Error", "Please enter a valid price.");
+      return;
     }
 
-    setLoading(true)
+    if (formData.image && !validateImageUrl(formData.image)) {
+      Alert.alert("Validation Error", "Please enter a valid image URL.");
+      return;
+    }
+
+    setLoading(true);
     try {
       const menuItemData = {
         name: formData.name.trim(),
@@ -89,90 +105,142 @@ export function CreateMenuItemScreen() {
         price,
         category: formData.category || undefined,
         restaurantId: formData.restaurantId,
-        image: formData.image,
-      }
+        image: formData.image.trim() || undefined,
+      };
 
       if (isEditing && menuItem) {
-        // Upload new image if changed
-        if (formData.image && formData.image !== menuItem.image) {
-          const imageUrl = await uploadMenuItemImage(formData.image, menuItem.id)
-          menuItemData.image = imageUrl
-        }
-        await updateMenuItem(menuItem.id, menuItemData)
-        Alert.alert("Success", "Menu item updated successfully")
+        await updateMenuItem(menuItem.id, menuItemData);
+        Alert.alert("Success", "Menu item updated successfully");
       } else {
-        const menuItemId = await createMenuItem(menuItemData)
-        // Upload image if provided
-        if (formData.image) {
-          const imageUrl = await uploadMenuItemImage(formData.image, menuItemId)
-          await updateMenuItem(menuItemId, { image: imageUrl })
-        }
-        Alert.alert("Success", "Menu item created successfully")
+        await createMenuItem(menuItemData);
+        Alert.alert("Success", "Menu item created successfully");
       }
 
-      navigation.goBack()
+      navigation.goBack();
     } catch (error) {
-      Alert.alert("Error", `Failed to ${isEditing ? "update" : "create"} menu item`)
+      Alert.alert(
+        "Error",
+        `Failed to ${isEditing ? "update" : "create"} menu item`
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getRestaurantName = (restaurantId: string) => {
-    const restaurant = restaurants.find((r) => r.id === restaurantId)
-    return restaurant?.name || "Select Restaurant"
-  }
+    const restaurant = restaurants.find((r) => r.id === restaurantId);
+    return restaurant?.name || "Select Restaurant";
+  };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <View style={styles.form}>
         <View style={styles.imageSection}>
-          <Text style={styles.label}>Menu Item Image</Text>
-          <TouchableOpacity style={styles.imagePicker} onPress={handleImagePicker}>
-            {formData.image ? (
-              <Image source={{ uri: formData.image }} style={styles.previewImage} />
-            ) : (
-              <View style={styles.imagePlaceholder}>
-                <Ionicons name="camera" size={32} color="#9ca3af" />
-                <Text style={styles.imagePlaceholderText}>Tap to add image</Text>
-              </View>
-            )}
-          </TouchableOpacity>
+          <Text style={[styles.label, { color: theme.colors.text }]}>
+            Menu Item Image URL
+          </Text>
+          <TextInput
+            style={[
+              styles.input,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                color: theme.colors.text,
+              },
+            ]}
+            value={formData.image}
+            onChangeText={(text) =>
+              setFormData((prev) => ({ ...prev, image: text }))
+            }
+            placeholder="Enter image URL (optional)"
+            placeholderTextColor={theme.colors.textSecondary}
+          />
+          {formData.image && validateImageUrl(formData.image) && (
+            <View style={styles.imagePreview}>
+              <Image
+                source={{ uri: formData.image }}
+                style={styles.previewImage}
+              />
+            </View>
+          )}
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Restaurant *</Text>
-          <View style={styles.pickerContainer}>
+          <Text style={[styles.label, { color: theme.colors.text }]}>
+            Restaurant *
+          </Text>
+          <View
+            style={[
+              styles.pickerContainer,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+              },
+            ]}
+          >
             <Picker
               selectedValue={formData.restaurantId}
-              onValueChange={(value) => setFormData((prev) => ({ ...prev, restaurantId: value }))}
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, restaurantId: value }))
+              }
               style={styles.picker}
             >
               <Picker.Item label="Select Restaurant" value="" />
               {restaurants.map((restaurant) => (
-                <Picker.Item key={restaurant.id} label={restaurant.name} value={restaurant.id} />
+                <Picker.Item
+                  key={restaurant.id}
+                  label={restaurant.name}
+                  value={restaurant.id}
+                />
               ))}
             </Picker>
           </View>
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Item Name *</Text>
+          <Text style={[styles.label, { color: theme.colors.text }]}>
+            Item Name *
+          </Text>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                color: theme.colors.text,
+              },
+            ]}
             value={formData.name}
-            onChangeText={(text) => setFormData((prev) => ({ ...prev, name: text }))}
+            onChangeText={(text) =>
+              setFormData((prev) => ({ ...prev, name: text }))
+            }
             placeholder="Enter menu item name"
+            placeholderTextColor={theme.colors.textSecondary}
           />
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Description *</Text>
+          <Text style={[styles.label, { color: theme.colors.text }]}>
+            Description *
+          </Text>
           <TextInput
-            style={[styles.input, styles.textArea]}
+            style={[
+              styles.input,
+              styles.textArea,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border,
+                color: theme.colors.text,
+              },
+            ]}
             value={formData.description}
-            onChangeText={(text) => setFormData((prev) => ({ ...prev, description: text }))}
+            onChangeText={(text) =>
+              setFormData((prev) => ({ ...prev, description: text }))
+            }
             placeholder="Describe the menu item"
+            placeholderTextColor={theme.colors.textSecondary}
             multiline
             numberOfLines={3}
           />
@@ -180,27 +248,55 @@ export function CreateMenuItemScreen() {
 
         <View style={styles.row}>
           <View style={[styles.inputGroup, styles.halfWidth]}>
-            <Text style={styles.label}>Price ($) *</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>
+              Price (Ghc) *
+            </Text>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                  color: theme.colors.text,
+                },
+              ]}
               value={formData.price}
-              onChangeText={(text) => setFormData((prev) => ({ ...prev, price: text }))}
+              onChangeText={(text) =>
+                setFormData((prev) => ({ ...prev, price: text }))
+              }
               placeholder="9.99"
+              placeholderTextColor={theme.colors.textSecondary}
               keyboardType="decimal-pad"
             />
           </View>
 
           <View style={[styles.inputGroup, styles.halfWidth]}>
-            <Text style={styles.label}>Category</Text>
-            <View style={styles.pickerContainer}>
+            <Text style={[styles.label, { color: theme.colors.text }]}>
+              Category
+            </Text>
+            <View
+              style={[
+                styles.pickerContainer,
+                {
+                  backgroundColor: theme.colors.surface,
+                  borderColor: theme.colors.border,
+                },
+              ]}
+            >
               <Picker
                 selectedValue={formData.category}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, category: value }))}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({ ...prev, category: value }))
+                }
                 style={styles.picker}
               >
                 <Picker.Item label="Select Category" value="" />
                 {CATEGORIES.map((category) => (
-                  <Picker.Item key={category} label={category} value={category} />
+                  <Picker.Item
+                    key={category}
+                    label={category}
+                    value={category}
+                  />
                 ))}
               </Picker>
             </View>
@@ -208,69 +304,61 @@ export function CreateMenuItemScreen() {
         </View>
 
         <TouchableOpacity
-          style={[styles.submitButton, loading && styles.disabledButton]}
+          style={[
+            styles.submitButton,
+            { backgroundColor: theme.colors.primary },
+            loading && styles.disabledButton,
+          ]}
           onPress={handleSubmit}
           disabled={loading}
         >
           <Text style={styles.submitButtonText}>
-            {loading ? "Saving..." : isEditing ? "Update Menu Item" : "Create Menu Item"}
+            {loading
+              ? "Saving..."
+              : isEditing
+              ? "Update Menu Item"
+              : "Create Menu Item"}
           </Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
   },
   form: {
-    padding: 16,
-    gap: 20,
+    padding: theme.spacing.lg,
+    gap: theme.spacing.lg,
   },
   imageSection: {
-    alignItems: "center",
+    gap: theme.spacing.sm,
   },
-  imagePicker: {
+  imagePreview: {
     width: 200,
     height: 200,
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: "hidden",
+    alignSelf: "center",
+    marginTop: theme.spacing.sm,
   },
   previewImage: {
     width: "100%",
     height: "100%",
   },
-  imagePlaceholder: {
-    flex: 1,
-    backgroundColor: "#f3f4f6",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: "#e5e7eb",
-    borderStyle: "dashed",
-  },
-  imagePlaceholderText: {
-    marginTop: 8,
-    color: "#9ca3af",
-    fontSize: 14,
-  },
   inputGroup: {
-    gap: 8,
+    gap: theme.spacing.sm,
   },
   label: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#374151",
   },
   input: {
-    backgroundColor: "#ffffff",
     borderWidth: 1,
-    borderColor: "#d1d5db",
     borderRadius: 8,
-    padding: 12,
+    padding: theme.spacing.md,
     fontSize: 16,
   },
   textArea: {
@@ -278,9 +366,7 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   pickerContainer: {
-    backgroundColor: "#ffffff",
     borderWidth: 1,
-    borderColor: "#d1d5db",
     borderRadius: 8,
   },
   picker: {
@@ -288,17 +374,16 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: "row",
-    gap: 12,
+    gap: theme.spacing.md,
   },
   halfWidth: {
     flex: 1,
   },
   submitButton: {
-    backgroundColor: "#2563eb",
-    padding: 16,
+    padding: theme.spacing.lg,
     borderRadius: 8,
     alignItems: "center",
-    marginTop: 20,
+    marginTop: theme.spacing.lg,
   },
   disabledButton: {
     opacity: 0.6,
@@ -308,4 +393,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-})
+});

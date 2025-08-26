@@ -1,38 +1,49 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl, Image } from "react-native"
-import { useNavigation } from "@react-navigation/native"
-import { Ionicons } from "@expo/vector-icons"
-import { fetchAllRestaurantsAdmin, deleteRestaurant } from "../../services/admin/restaurants"
-import type { Restaurant } from "../../types"
+import { theme } from "@/app/constants";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { useEffect, useState } from "react";
+import {
+  Alert,
+  FlatList,
+  Image,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import {
+  deleteRestaurant,
+  fetchAllRestaurantsAdmin,
+} from "../../services/admin/restaurants";
+import type { Restaurant } from "../../types";
 
 export function RestaurantManagementScreen() {
-  const navigation = useNavigation()
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([])
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
+  const navigation = useNavigation();
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadRestaurants = async () => {
     try {
-      const data = await fetchAllRestaurantsAdmin()
-      setRestaurants(data)
+      const data = await fetchAllRestaurantsAdmin();
+      setRestaurants(data);
     } catch (error) {
-      Alert.alert("Error", "Failed to load restaurants")
+      Alert.alert("Error", "Failed to load restaurants");
     } finally {
-      setLoading(false)
-      setRefreshing(false)
+      setLoading(false);
+      setRefreshing(false);
     }
-  }
+  };
 
   useEffect(() => {
-    loadRestaurants()
-  }, [])
+    loadRestaurants();
+  }, []);
 
   const handleRefresh = () => {
-    setRefreshing(true)
-    loadRestaurants()
-  }
+    setRefreshing(true);
+    loadRestaurants();
+  };
 
   const handleDeleteRestaurant = (restaurant: Restaurant) => {
     Alert.alert(
@@ -45,17 +56,19 @@ export function RestaurantManagementScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              await deleteRestaurant(restaurant.id)
-              setRestaurants((prev) => prev.filter((r) => r.id !== restaurant.id))
-              Alert.alert("Success", "Restaurant deleted successfully")
+              await deleteRestaurant(restaurant.id);
+              setRestaurants((prev) =>
+                prev.filter((r) => r.id !== restaurant.id)
+              );
+              Alert.alert("Success", "Restaurant deleted successfully");
             } catch (error) {
-              Alert.alert("Error", "Failed to delete restaurant")
+              Alert.alert("Error", "Failed to delete restaurant");
             }
           },
         },
-      ],
-    )
-  }
+      ]
+    );
+  };
 
   const renderRestaurant = ({ item }: { item: Restaurant }) => (
     <View style={styles.restaurantCard}>
@@ -72,22 +85,33 @@ export function RestaurantManagementScreen() {
       <View style={styles.actions}>
         <TouchableOpacity
           style={styles.editButton}
-          onPress={() => navigation.navigate("CreateRestaurant" as never, { restaurant: item } as never)}
+          onPress={() =>
+            navigation.navigate(
+              "CreateRestaurant" as never,
+              { restaurant: item } as never
+            )
+          }
         >
-          <Ionicons name="pencil" size={20} color="#2563eb" />
+          <Ionicons name="pencil" size={20} color={theme.colors.primary} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteRestaurant(item)}>
-          <Ionicons name="trash" size={20} color="#dc2626" />
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => handleDeleteRestaurant(item)}
+        >
+          <Ionicons name="trash" size={20} color={theme.colors.error} />
         </TouchableOpacity>
       </View>
     </View>
-  )
+  );
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate("CreateRestaurant" as never)}>
-          <Ionicons name="add" size={24} color="#ffffff" />
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => navigation.navigate("CreateRestaurant" as never)}
+        >
+          <Ionicons name="add" size={24} color={theme.colors.surface} />
           <Text style={styles.addButtonText}>Add Restaurant</Text>
         </TouchableOpacity>
       </View>
@@ -97,52 +121,60 @@ export function RestaurantManagementScreen() {
         renderItem={renderRestaurant}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Ionicons name="restaurant" size={64} color="#9ca3af" />
+            <Ionicons
+              name="restaurant"
+              size={64}
+              color={theme.colors.textSecondary}
+            />
             <Text style={styles.emptyText}>No restaurants found</Text>
-            <Text style={styles.emptySubtext}>Add your first restaurant to get started</Text>
+            <Text style={styles.emptySubtext}>
+              Add your first restaurant to get started
+            </Text>
           </View>
         }
       />
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: theme.colors.background,
   },
   header: {
-    padding: 16,
-    backgroundColor: "#ffffff",
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    borderBottomColor: theme.colors.border,
   },
   addButton: {
-    backgroundColor: "#2563eb",
+    backgroundColor: theme.colors.primary,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    padding: 12,
+    padding: theme.spacing.sm,
     borderRadius: 8,
-    gap: 8,
+    gap: theme.spacing.xs,
   },
   addButtonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "600",
+    color: theme.colors.surface,
+    fontSize: theme.typography.sizes.md,
+    fontWeight: theme.typography.weights.semibold,
   },
   list: {
-    padding: 16,
-    gap: 12,
+    padding: theme.spacing.md,
+    gap: theme.spacing.sm,
   },
   restaurantCard: {
-    backgroundColor: "#ffffff",
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
-    padding: 16,
+    padding: theme.spacing.md,
     flexDirection: "row",
     alignItems: "center",
     shadowColor: "#000",
@@ -155,41 +187,41 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 8,
-    marginRight: 12,
+    marginRight: theme.spacing.sm,
   },
   restaurantInfo: {
     flex: 1,
   },
   restaurantName: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#1f2937",
+    fontSize: theme.typography.sizes.lg,
+    fontWeight: theme.typography.weights.semibold,
+    color: theme.colors.text,
     marginBottom: 4,
   },
   restaurantCuisine: {
-    fontSize: 14,
-    color: "#6b7280",
-    marginBottom: 8,
+    fontSize: theme.typography.sizes.sm,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xs,
   },
   restaurantDetails: {
     flexDirection: "row",
-    gap: 12,
+    gap: theme.spacing.sm,
   },
   detailText: {
-    fontSize: 12,
-    color: "#9ca3af",
+    fontSize: theme.typography.sizes.xs,
+    color: theme.colors.textSecondary,
   },
   actions: {
     flexDirection: "row",
-    gap: 8,
+    gap: theme.spacing.xs,
   },
   editButton: {
-    padding: 8,
+    padding: theme.spacing.xs,
     borderRadius: 6,
-    backgroundColor: "#eff6ff",
+    backgroundColor: theme.colors.background,
   },
   deleteButton: {
-    padding: 8,
+    padding: theme.spacing.xs,
     borderRadius: 6,
     backgroundColor: "#fef2f2",
   },
@@ -199,14 +231,14 @@ const styles = StyleSheet.create({
     paddingVertical: 64,
   },
   emptyText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#6b7280",
-    marginTop: 16,
+    fontSize: theme.typography.sizes.lg,
+    fontWeight: theme.typography.weights.semibold,
+    color: theme.colors.textSecondary,
+    marginTop: theme.spacing.md,
   },
   emptySubtext: {
-    fontSize: 14,
-    color: "#9ca3af",
+    fontSize: theme.typography.sizes.sm,
+    color: theme.colors.textSecondary,
     marginTop: 4,
   },
-})
+});
